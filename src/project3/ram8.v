@@ -1,8 +1,7 @@
 module RAM8 (
     input clk, res, write,
-    input [2:0] w_add,
+    input [2:0] address,
     input [7:0] in,
-    input [2:0] r_add,
     output reg [7:0] out
 );
     //8 boxes of 8 bits each
@@ -20,12 +19,12 @@ module RAM8 (
                     end
 
             else
-                if(write)
+                if(load)
                 //if writing, store input in write address!
-                    mem[w_add] <= in;
-            else if (write == 0)
+                    mem[address] <= in;
+            else if (load == 0)
                 //if not, output what's in the read address!
-                out <= mem[r_add];
+                out <= mem[address];
         end
 
 endmodule
