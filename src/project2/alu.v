@@ -3,7 +3,7 @@ module alu (
     input wire [15:0] x,
     input wire [15:0] y,
 
-    //control bits
+    //control bits (can potentially code 128 different calculations)
     input wire zx,
     input wire nx,
     input wire zy,
