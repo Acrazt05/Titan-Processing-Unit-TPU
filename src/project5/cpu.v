@@ -25,7 +25,7 @@ module cpu (
     output [14:0] addressM,
 
     //to instruction memory
-    output [14:0] pcOutput //TODO: maybe change to pc if there is no errors
+    output [14:0] pc //TODO: maybe change to pc if there is no errors
 );
     
 
@@ -82,7 +82,7 @@ module cpu (
     );
 
     wire [15:0] programCounterOutput;
-    assign pcOutput = programCounterOutput[14:0];
+    assign pc = programCounterOutput[14:0];
     assign addressM = ARegOutput[14:0];
 
     reg shouldJump;
