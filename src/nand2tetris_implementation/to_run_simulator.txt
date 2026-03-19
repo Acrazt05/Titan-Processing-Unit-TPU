@@ -1,0 +1,8 @@
+//iverilog -o computer.out computer_tb.v computer.v cpu.v memory.v rom_32k.v register_16.v pc.v alu.v screen.v ram_16k.v keyboard.v
+iverilog -o computer.out computer_tb.v computer.v
+
+vvp computer.out
+
+pip install pygame
+
+python gui.py
