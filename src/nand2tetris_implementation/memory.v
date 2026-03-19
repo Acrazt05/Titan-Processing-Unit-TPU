@@ -10,12 +10,16 @@ module memory (
     output reg [15:0] out
 );
 
-    wire [1:0] memoryChipSelector = address[14:13];
-  
+    // Address decoding (fixed)
+    wire isRAM = (address <= 15'd16383);
+    wire isScreen = (address >= 15'd16384) && (address <= 15'd24575);
+    wire isKeyboard = (address == 15'd24576);
+
+    // RAM MEMORY
     wire [13:0] memoryAddress = address[13:0];
-    wire loadRam = !memoryChipSelector[0] & load;
+    wire loadRam = isRAM & load;
     wire [15:0] ramOut;
-  
+
     ram_16k ram_16k(
         .in(in),
         .out(ramOut),
@@ -24,18 +28,20 @@ module memory (
         .address(memoryAddress)
     );
 
-    wire loadScreen = memoryChipSelector[0] & load;
+    // SCREEN MEMORY
+    wire loadScreen = isScreen & load;
     wire [15:0] screenOut;
-    wire [12:0] screenAddress = address[12:0];
-  
+    wire [12:0] screenAddress = address - 15'd16384;
+
     screen screen(
         .in(in),
         .out(screenOut),
         .clk(clk),
         .load(loadScreen),
         .address(screenAddress)
-    );   
-
+    );
+    
+    // KEYBOARD
     wire [15:0] keyboardOut;
   
     keyboard keyboard(
@@ -44,33 +50,22 @@ module memory (
     );
 
     always @(posedge clk) begin
-        case (memoryChipSelector)
-            //RAM MEMORY ADDRESS 
-            2'b00, 2'b01: out <= ramOut;
-            //SCREEN ADDRESS
-            2'b10: out <= screenOut;
-             //KEYBOARD ADDRESS (24576)
-            2'b11: out <= keyboardOut;
-            //UNSUPPORTED MEMORY ADDRESS
-            default: out = 16'bx; // Include a default case to avoid latches
-        endcase
-
-        /*
-        if(address <= 15'd_16383) begin
-            //RAM MEMORY ADDRESS
+        //RAM MEMORY ADDRESS 
+        if (isRAM) begin
             out <= ramOut;
-            ramSelected <= 1;
-        end else if(address <= 15'd_24575) begin
-            //SCREEN ADDRESS
+        end 
+        //SCREEN ADDRESS
+        else if (isScreen) begin
             out <= screenOut;
-            ramSelected <= 0;
-        end else if(address == 15'd_24576) begin
-            //KEYBOARD ADDRESS
+        end 
+        //KEYBOARD ADDRESS (24576)
+        else if (isKeyboard) begin
             out <= keyboardOut;
-        end else begin
-            //UNSUPPORTED MEMORY ADDRESS
+        end 
+        //UNSUPPORTED MEMORY ADDRESS
+        else begin
             out <= 16'b0;
-        end*/
+        end
     end
     
 endmodule

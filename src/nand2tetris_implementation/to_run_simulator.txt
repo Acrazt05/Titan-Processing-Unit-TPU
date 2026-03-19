@@ -6,3 +6,8 @@ vvp computer.out
 pip install pygame
 
 python gui.py
+
+gtkwave wave.vcd
+
+
+or just run simulate

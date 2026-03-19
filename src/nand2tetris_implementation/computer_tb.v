@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1ns
 
 module computer_tb;
 
@@ -12,7 +12,7 @@ module computer_tb;
     );
 
     // Clock: 10ns period (100 MHz equivalent simulation)
-    always #5 clk = ~clk;
+    always #1 clk = ~clk;
 
     initial begin
         // Waveform dump
@@ -20,11 +20,11 @@ module computer_tb;
         $dumpvars(0, computer_tb);
 
         // Reset sequence
-        #20;
+        #1;
         reset = 0;
 
         // Run long enough for programs to execute
-        #500000;
+        #93;
 
         $finish;
     end

@@ -12,8 +12,12 @@ module rom_32k (
     reg [15:0] mem [0:32767];
 
     // Load memory from file
+    parameter HEX_PATH = "./programs/";
+    parameter file_name = "program.mem";
+    
     initial begin
-        $readmemh("program.mem", mem);
+        //$readmemb("program_binary.mem", mem); //binary instructions
+        $readmemh({HEX_PATH, file_name}, mem); //hex instructions
     end
 
     always @(posedge clk) begin
