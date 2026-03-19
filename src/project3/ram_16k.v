@@ -1,5 +1,5 @@
 //16384 16-bit registers 
-module RAM16K (
+module ram_16k (
     //DATA
     input [15:0] in,
     output reg [15:0] out,
