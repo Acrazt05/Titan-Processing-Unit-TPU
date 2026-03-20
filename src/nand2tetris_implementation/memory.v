@@ -7,7 +7,7 @@ module memory (
     input [14:0] address,
     input load,
     input clk,
-    output reg [15:0] out
+    output [15:0] out
 );
 
     // Address decoding (fixed)
@@ -49,23 +49,9 @@ module memory (
         .clk(clk)
     );
 
-    always @(posedge clk) begin
-        //RAM MEMORY ADDRESS 
-        if (isRAM) begin
-            out <= ramOut;
-        end 
-        //SCREEN ADDRESS
-        else if (isScreen) begin
-            out <= screenOut;
-        end 
-        //KEYBOARD ADDRESS (24576)
-        else if (isKeyboard) begin
-            out <= keyboardOut;
-        end 
-        //UNSUPPORTED MEMORY ADDRESS
-        else begin
-            out <= 16'b0;
-        end
-    end
+    assign out = isRAM      ? ramOut :      //RAM MEMORY ADDRESS 
+                 isScreen   ? screenOut :   //SCREEN ADDRESS
+                 isKeyboard ? keyboardOut : //KEYBOARD ADDRESS (24576)
+                                16'b0;      //UNSUPPORTED MEMORY ADDRESS
     
 endmodule
