@@ -13,6 +13,9 @@ module ram_16k (
     //16384 registers of 16 bits each
     reg [15:0] mem [0:16383];
 
+    integer f;
+    integer i;
+
     always @(posedge clk) begin
         
         if(load) begin
@@ -20,6 +23,15 @@ module ram_16k (
         end 
         
         out <= mem[address];
+
+        // Dump entire screen periodically
+        f = $fopen("ram.bin", "w");
+        if (f) begin
+            for (i = 0; i < 16384; i = i + 1) begin
+                $fwrite(f, "%h\n", mem[i]);
+            end
+            $fclose(f);
+        end
     end
 
 endmodule

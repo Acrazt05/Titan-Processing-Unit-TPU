@@ -1,0 +1,8 @@
+//shows a counting binary number on the screen
+@0000
+D=A;
+@4000
+D=D+1;
+M=D;
+@0002
+0;JMP

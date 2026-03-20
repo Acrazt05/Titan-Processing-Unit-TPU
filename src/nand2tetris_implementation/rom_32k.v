@@ -13,11 +13,11 @@ module rom_32k (
 
     // Load memory from file
     parameter HEX_PATH = "./programs/";
-    parameter file_name = "program.mem";
-    
+    parameter file_name = "jump.mem";
+
     initial begin
-        //$readmemb("program_binary.mem", mem); //binary instructions
-        $readmemh({HEX_PATH, file_name}, mem); //hex instructions
+        $readmemb({HEX_PATH, file_name}, mem); //binary instructions
+        //$readmemh({HEX_PATH, file_name}, mem); //hex instructions
     end
 
     always @(posedge clk) begin

@@ -1,39 +1,22 @@
-// i = 16384 (start of screen)
+4000 //@SCREEN 0
+8E88 //Set all 1
+8DE0 //A=A+1
+8E88 //Set all 1
+8DE0 //A=A+1
+8E88 //Set all 1
+8DE0 //A=A+1
+8E88 //Set all 1
+8DE0 //A=A+1
+8E88 //Set all 1
+// D != 4900 ? GOTO 0 : no jump
+
+
+@4000
+M=A
+D=M+1
+A=D
+M=-1 //fill
+A = 2 //GOTO begining
+JUMP
+
 4000
-EC10
-0000
-E308
-
-// end = 24576 (end of screen)
-6000
-EC10
-0001
-E308
-
-// LOOP:
-0000
-FC10
-0001
-F4D0
-0016
-E305
-
-// M[i] = -1
-0000
-FC10
-FC88
-
-// i = i + 1
-0000
-FC10
-EC10
-0000
-E308
-
-// goto LOOP
-0008
-EA87
-
-// END:
-0016
-EA87
