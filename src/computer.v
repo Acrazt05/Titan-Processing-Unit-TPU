@@ -1,0 +1,58 @@
+`include "cpu.v"
+`include "spi_memory.v"
+
+module computer (
+    input reset,
+    input clk,
+    
+    // SPI pins
+    output reg mosi,
+    input miso,
+    output reg cs,
+    output spi_clock
+);
+
+    wire [15:0] instruction;
+    wire [14:0] count;
+
+    wire [15:0] inM;
+    wire writeM;
+    wire [15:0] outM;
+    wire [14:0] addressM;
+
+    wire inc;
+
+    cpu cpu(
+        .inM(inM),
+        .instruction(instruction),
+        .reset(reset),
+        .clk(clk),
+        .outM(outM),
+        .writeM(writeM),
+        .addressM(addressM),
+        .pc(count),
+        .inc(inc)
+    );
+
+    spi_memory memory(
+
+        .clk(clk),
+        .reset(reset),
+
+        .rom_address(count),
+        .rom_data_out(instruction),
+
+        .ram_address(addressM),
+        .ram_write(writeM),
+        .ram_data_in(outM),
+        .ram_data_out(inM),
+        
+        .data_ready(inc),
+        
+        .mosi(mosi),
+        .miso(miso),
+        .cs(cs),
+        .spi_clock(spi_clock)
+    );
+
+endmodule
