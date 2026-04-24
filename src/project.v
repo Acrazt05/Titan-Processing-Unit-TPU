@@ -6,6 +6,7 @@
 `default_nettype none
 
 `include "computer.v"
+`include "spi_ram_sim.v"
 
 module tt_um_titan_proccesing_unit (
     input  wire [7:0] ui_in,    // Dedicated inputs
@@ -30,7 +31,7 @@ module tt_um_titan_proccesing_unit (
 
   wire cs = uio_out[0];
   wire mosi = uio_out[1];
-  wire miso = uio_in[2];
+  wire miso;// = uio_in[2];
   wire sck = uio_out[3];
 
   computer tpu(
@@ -41,6 +42,14 @@ module tt_um_titan_proccesing_unit (
     .reset(~rst_n),
     .clk(clk),
 
+    .mosi(mosi),
+    .miso(miso),
+    .cs(cs),
+    .spi_clock(sck)
+  );
+
+  //TODO: REMOVE! just for testing
+  spi_ram_sim memory(
     .mosi(mosi),
     .miso(miso),
     .cs(cs),

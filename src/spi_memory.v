@@ -1,21 +1,6 @@
 //==========================================================
 // Generates a slower SPI clock from the FPGA system clock
 //==========================================================
-module spi_clock_generator(
-    input clk,
-    output reg spi_clock
-);
-
-//TODO: change to actual frequency values
-
-reg [2:0] counter;
-
-always @(posedge clk) begin
-    counter <= counter + 1;
-    spi_clock <= counter[2];   // divide clock by 8
-end
-
-endmodule
 
 //==========================================================
 // SPI MEMORY
@@ -32,10 +17,11 @@ endmodule
 module spi_memory (
     input clk,
     input reset,
+    input ram_enabled, //0 -> only read ROM, 1 -> read both ROM and RAM
 
     // CPU addresses (WORD addresses)
-    input [15:0] ram_address,
-    input [15:0] rom_address,
+    input [13:0] ram_address, //TODO: actually both 14-bit address spaces, will keep the 2 bits but will ignore for now
+    input [13:0] rom_address,
 
     // RAM write interface
     input [15:0] ram_data_in,
@@ -64,18 +50,15 @@ module spi_memory (
     // ROM  : 0x0000 - 0x7FFF  (byte addresses)
     // RAM  : 0x8000 - 0xFFFF
     //==========================================================
-    parameter RAM_OFFSET = 16'h8000; //TODO: check these addresses and offset are good
+    parameter RAM_OFFSET = 16'h8000;
 
 
     //==========================================================
     // SPI clock generation
     //==========================================================
-    wire spi_clk;
-
-    spi_clock_generator clkgen(clk, spi_clk);
+    reg spi_clk;
 
     assign spi_clock = spi_clk;
-
 
     //==========================================================
     // Internal registers
@@ -97,13 +80,11 @@ module spi_memory (
     // FSM state register
     reg [3:0] state;
 
-
     //==========================================================
     // SPI command values
     //==========================================================
     localparam SPI_READ  = 8'h03;
     localparam SPI_WRITE = 8'h02;
-
 
     //==========================================================
     // State Machine
@@ -127,21 +108,30 @@ module spi_memory (
 
     localparam DONE            = 13;
 
+    always @(ram_address or rom_address) begin
+        state <= IDLE;
+        cs <= 1;
+        data_ready <= 0;
+    end
+
+    reg [2:0] counter;
 
     //==========================================================
     // Main SPI controller
     //==========================================================
-    always @(posedge spi_clk or posedge reset) begin
+    always @(posedge clk or posedge reset) begin
+
+        counter <= counter + 1; 
+        spi_clk <= counter[2];   // divide clock by 8         //TODO: change to actual frequency values
 
         if (reset) begin
-
             state <= IDLE;
             cs <= 1;
             data_ready <= 0;
-
+            counter <= 0;
         end
 
-        else begin
+        else if(spi_clk) begin
 
             case(state)
                 //==========================================================
@@ -248,18 +238,24 @@ module spi_memory (
 
                         rom_data_out <= {byte0, byte1}; //combine both bytes into 16-bit word instruction to give back to cpu
 
-                        // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
-                        spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
+                        if (ram_enabled) begin
+                            // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
+                            spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
 
-                        if(ram_write) //decide wether or not to read or write to ram memory
-                            shift_reg <= SPI_WRITE; //save command
-                        else
-                            shift_reg <= SPI_READ; //save command
+                            if(ram_write) //decide wether or not to read or write to ram memory
+                                shift_reg <= SPI_WRITE; //save command
+                            else
+                                shift_reg <= SPI_READ; //save command
 
-                        bit_counter <= 7; //restart bit counter to start sending read or write ram cmd
+                            bit_counter <= 7; //restart bit counter to start sending read or write ram cmd
 
-                        state <= RAM_CMD; //move on to next state (send ram command (read or write)) (we don't use fast read)
-
+                            state <= RAM_CMD; //move on to next state (send ram command (read or write)) (we don't use fast read)
+                        
+                        end else begin
+                            state <= DONE; //finish transaction, RAM doesn't need to be read
+                            cs <= 1;
+                            data_ready <= 1;
+                        end
                     end
                     else
                         bit_counter <= bit_counter - 1; //there is one less bit to be received 

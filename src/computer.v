@@ -13,12 +13,12 @@ module computer (
 );
 
     wire [15:0] instruction;
-    wire [14:0] count;
+    wire [13:0] count;
 
     wire [15:0] inM;
     wire writeM;
     wire [15:0] outM;
-    wire [14:0] addressM;
+    wire [13:0] addressM;
 
     wire inc;
 
@@ -38,6 +38,7 @@ module computer (
 
         .clk(clk),
         .reset(reset),
+        .ram_enabled(1), //TODO: add GPIO router module
 
         .rom_address(count),
         .rom_data_out(instruction),

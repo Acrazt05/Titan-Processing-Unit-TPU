@@ -23,10 +23,10 @@ module cpu (
     //to data memory
     output [15:0] outM,
     output writeM,
-    output [14:0] addressM,
+    output [13:0] addressM,
 
     //to instruction memory
-    output [14:0] pc //TODO: maybe change to pc if there is no errors
+    output [13:0] pc //TODO: maybe change to pc if there is no errors
 );
 
     wire isCInstruction = instruction[15];
@@ -81,9 +81,9 @@ module cpu (
         .out(ALUInputX)
     );
 
-    wire [15:0] programCounterOutput;
-    assign pc = programCounterOutput[14:0];
-    assign addressM = ARegOutput[14:0];
+    wire [13:0] programCounterOutput;
+    assign pc = programCounterOutput[13:0];
+    assign addressM = ARegOutput[13:0];
 
     reg shouldJump;
 
@@ -118,7 +118,7 @@ module cpu (
         .inc(inc),
         .reset(reset),
         .clk(clk),
-        .in(ARegOutput),
+        .in(addressM),
         .out(programCounterOutput)
     );
 
