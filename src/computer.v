@@ -6,9 +6,9 @@ module computer (
     input clk,
     
     // SPI pins
-    output reg mosi,
+    output mosi,
     input miso,
-    output reg cs,
+    output cs,
     output spi_clock
 );
 
@@ -38,7 +38,7 @@ module computer (
 
         .clk(clk),
         .reset(reset),
-        .ram_enabled(1), //TODO: add GPIO router module
+        .ram_enabled(1'b1), //TODO: add GPIO router module
 
         .rom_address(count),
         .rom_data_out(instruction),

@@ -1,6 +1,23 @@
-//==========================================================
-// Generates a slower SPI clock from the FPGA system clock
-//==========================================================
+module spi_clock_generator (
+    input  wire clk,
+    input  wire reset,
+    output wire clk_en
+);
+    // 3-bit counter to count 0-7 (8 states)
+    reg [2:0] counter = 3'd0;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            counter <= 3'd0;
+        end else begin
+            counter <= counter + 3'd1;
+        end
+    end
+
+    // Pulse high when counter wraps around
+    assign clk_en = (counter == 3'd7);
+
+endmodule
 
 //==========================================================
 // SPI MEMORY
@@ -41,7 +58,6 @@ module spi_memory (
     output spi_clock
 );
 
-
     //==========================================================
     // Memory layout inside SPI RAM
     //
@@ -52,13 +68,15 @@ module spi_memory (
     //==========================================================
     parameter RAM_OFFSET = 16'h8000;
 
-
     //==========================================================
     // SPI clock generation
     //==========================================================
-    reg spi_clk;
-
-    assign spi_clock = spi_clk;
+    
+    spi_clock_generator spi_clock_gen(
+        .clk(clk),
+        .reset(reset),
+        .clk_en(spi_clock)
+    );
 
     //==========================================================
     // Internal registers
@@ -114,24 +132,16 @@ module spi_memory (
         data_ready <= 0;
     end
 
-    reg [2:0] counter;
-
     //==========================================================
     // Main SPI controller
     //==========================================================
     always @(posedge clk or posedge reset) begin
 
-        counter <= counter + 1; 
-        spi_clk <= counter[2];   // divide clock by 8         //TODO: change to actual frequency values
-
         if (reset) begin
             state <= IDLE;
             cs <= 1;
             data_ready <= 0;
-            counter <= 0;
-        end
-
-        else if(spi_clk) begin
+        end else if(spi_clock) begin
 
             case(state)
                 //==========================================================

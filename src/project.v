@@ -27,12 +27,22 @@ module tt_um_titan_proccesing_unit (
 
   */
 
-  assign uio_oe[3:0] = 4'b1101; 
+  //assign uio_oe[3:0] = 4'b1101; 
 
-  wire cs = uio_out[0];
-  wire mosi = uio_out[1];
+  wire cs;// = uio_out[0];
+  wire mosi;// = uio_out[1];
   wire miso;// = uio_in[2];
-  wire sck = uio_out[3];
+  wire sck;// = uio_out[3];
+
+  reg [15:0] counter;
+
+  always @(posedge clk or posedge ~rst_n) begin
+    if(~rst_n) begin
+      counter <= 0;
+    end else begin
+      counter <= counter + 1;
+    end
+  end
 
   computer tpu(
 

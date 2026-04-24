@@ -1,5 +1,5 @@
 module spi_ram_sim (
-    input  wire spi_clk,
+    input  wire spi_clock,
     input  wire cs,
     input  wire mosi,
     output reg  miso
@@ -52,7 +52,7 @@ module spi_ram_sim (
     //====================================================
     // SPI operation
     //====================================================
-    always @(posedge spi_clk) begin
+    always @(posedge spi_clock) begin
 
         if(cs)
             miso <= 0;
