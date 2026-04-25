@@ -1,5 +1,5 @@
 `include "cpu.v"
-`include "spi_memory.v"
+`include "memory_router.v"
 
 module computer (
     input reset,
@@ -34,11 +34,9 @@ module computer (
         .inc(inc)
     );
 
-    spi_memory memory(
-
+    memory_router memory(
         .clk(clk),
         .reset(reset),
-        .ram_enabled(1), //TODO: add GPIO router module
 
         .rom_address(count),
         .rom_data_out(instruction),
