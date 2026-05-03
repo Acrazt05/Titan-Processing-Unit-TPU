@@ -30,7 +30,7 @@ module computer_tb;
         reset = 1;
 
         // Run long enough for programs to execute
-        #1001;
+        #10001;
 
         $finish;
     end
