@@ -4,8 +4,8 @@ module spi_clock_generator (
     output wire clk_en
 );
     //TODO: remove!
-    assign clk_en = clk;
-/*
+    //assign clk_en = clk;
+
     // 3-bit counter to count 0-7 (8 states)
     reg [2:0] counter = 3'd0;
 
@@ -18,7 +18,7 @@ module spi_clock_generator (
     end
 
     // Pulse high when counter wraps around
-    assign clk_en = (counter == 3'd7);*/
+    assign clk_en = (counter == 3'd7);
 
 endmodule
 
@@ -103,6 +103,9 @@ module spi_memory (
 
     reg dummy_bit;
 
+    reg [15:0] buffer_ram_data_out;
+    reg [15:0] buffer_rom_data_out;
+
     //==========================================================
     // SPI command values
     //==========================================================
@@ -130,6 +133,26 @@ module spi_memory (
     localparam RAM_WRITE_DATA1 = 12;
 
     localparam DONE            = 13;
+
+
+    always @(posedge clk ) begin
+        if(data_ready == 1) begin
+            state <= IDLE;
+            cs <= 1;
+            data_ready <= 0;
+            mosi <= 0;
+            dummy_bit <= 1'b0;
+        end
+    end
+
+    always @(posedge reset) begin
+        state <= IDLE;
+        cs <= 1;
+        data_ready <= 0;
+        mosi <= 0;
+        dummy_bit <= 1'b0;
+    end
+
 
     //drive mosi
     always @(negedge spi_clock) begin
@@ -253,7 +276,8 @@ module spi_memory (
             //==========================================================
             RAM_WRITE_DATA0: begin
 
-                mosi <= ram_data_in[15 - bit_counter];
+                //mosi <= ram_data_in[15 - bit_counter];
+                mosi <= ram_data_in[7 + bit_counter];
 
                 if(bit_counter == 0) begin
                     bit_counter <= 7;
@@ -269,7 +293,8 @@ module spi_memory (
             //==========================================================
             RAM_WRITE_DATA1: begin
 
-                mosi <= ram_data_in[7 - bit_counter];
+                //mosi <= ram_data_in[7 - bit_counter];
+                mosi <= ram_data_in[bit_counter];
 
                 if(bit_counter == 0)
                     state <= DONE;
@@ -279,14 +304,6 @@ module spi_memory (
             end
         endcase
 
-    end
-
-    always @(posedge reset) begin
-        state <= IDLE;
-        cs <= 1;
-        data_ready <= 0;
-        mosi <= 0;
-        dummy_bit <= 1'b0;
     end
 
     //==========================================================
@@ -354,7 +371,7 @@ module spi_memory (
 
                 if(bit_counter == 0) begin //2nd rom data byte has been received (move on to ram write/read cmd)
 
-                    rom_data_out <= {byte0, byte1[7:1], miso}; //combine both bytes into 16-bit word instruction to give back to cpu
+                    buffer_rom_data_out <= {byte0, byte1[7:1], miso}; //combine both bytes into 16-bit word instruction to give back to cpu
 
                     if (ram_enabled) begin
                         // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
@@ -408,7 +425,7 @@ module spi_memory (
 
                 if(bit_counter == 0) begin
 
-                    ram_data_out <= {byte0, byte1[7:1], miso};
+                    buffer_ram_data_out <= {byte0, byte1[7:1], miso};
 
                     state <= DONE;
 
@@ -422,6 +439,8 @@ module spi_memory (
             // Finish transaction
             //==========================================================
             DONE: begin
+                ram_data_out <= buffer_ram_data_out;
+                rom_data_out <= buffer_rom_data_out;
                 cs <= 1;
                 data_ready <= 1;
                 state <= IDLE;

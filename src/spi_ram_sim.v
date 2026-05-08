@@ -1,5 +1,6 @@
 module spi_ram_sim #(
-    parameter MEMFILE = "program.hex"
+    parameter HEX_PATH = "./programs/",
+    parameter file_name = "program.hex"
 )(
     input  wire spi_clock,
     input  wire cs,
@@ -46,13 +47,15 @@ module spi_ram_sim #(
     initial begin
 
         // preload ROM program
-        $readmemh(MEMFILE, mem);
+
+        //$readmemb({HEX_PATH, file_name}, mem); //binary instructions
+        $readmemh({HEX_PATH, file_name}, mem); //hex instructions
 
         spi_log   = $fopen("spi_transactions.log","w");
         dump_file = $fopen("memory_dump.hex","w");
 
         $display("SPI RAM simulator initialized");
-        $display("Loaded program: %s", MEMFILE);
+        $display("Loaded program: %s", file_name);
 
         //---------------------------------------------------
         // Show first 5 memory locations
@@ -79,6 +82,7 @@ module spi_ram_sim #(
         state <= IDLE;
         miso <= 0;
         bit_counter <= 7;
+        //dump_memory();
     end
 
     //sample -> posedge (mosi)

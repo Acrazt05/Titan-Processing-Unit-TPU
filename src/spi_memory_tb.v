@@ -107,7 +107,19 @@ module spi_memory_tb;
         $display("ROM DATA = %h", rom_data_out);
         $display("RAM DATA = %h", ram_data_out);
 
-        //#100;
+
+                //rom_address = 16'h0001;
+        rom_address = 14'b00000000000010;
+        ram_address = 14'b00000000000010;
+        ram_enabled = 1;
+        ram_data_in = 16'h0000;
+        ram_write = 0;
+
+        #100;
+        wait(data_ready);
+
+        $display("ROM DATA = %h", rom_data_out);
+        $display("RAM DATA = %h", ram_data_out);
         
         $display("Simulation finished");
         $finish;

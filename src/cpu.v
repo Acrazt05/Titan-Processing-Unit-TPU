@@ -42,9 +42,12 @@ module cpu (
     wire loadAReg = !isCInstruction | destPart[2];
     wire [15:0] ARegOutput;
 
+    //wire clk_en = clk & inc;
+
+
     register_16 A_reg (
             .in(ARegInput),
-            .load(loadAReg),
+            .load(loadAReg & inc),
             .clk(clk),
             .out(ARegOutput)
         );
@@ -76,7 +79,7 @@ module cpu (
 
     register_16 D_reg (
         .in(ALUOutput),
-        .load(loadDReg),
+        .load(loadDReg & inc),
         .clk(clk),
         .out(ALUInputX)
     );
