@@ -6,9 +6,9 @@ module computer (
     input clk,
     
     // SPI pins
-    output reg mosi,
+    output mosi,
     input miso,
-    output reg cs,
+    output cs,
     output spi_clock
 );
 

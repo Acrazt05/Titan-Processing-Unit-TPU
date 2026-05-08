@@ -12,7 +12,7 @@ module computer_tb;
         .uio_in(8'b0),
         .uio_out(),
         .uio_oe(),
-        .ena(1),
+        .ena(1'b1),
         .clk(clk),
         .rst_n(reset)
     );
@@ -27,10 +27,10 @@ module computer_tb;
 
         // Reset sequence
         #1;
-        reset = 0;
+        reset = 1;
 
         // Run long enough for programs to execute
-        #1001;
+        #200001;
 
         $finish;
     end
