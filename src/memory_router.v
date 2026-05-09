@@ -67,7 +67,7 @@ module memory_router(
     assign miso = uio_in[2];
 
     assign uio_oe = uio_output[7:0];
-    assign uio_out[7:4] = uio_output[15:8];
+    assign uio_out[7:4] = uio_output[15:12];
 
     wire [15:0] spi_ram_out;
 
