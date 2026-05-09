@@ -4,22 +4,19 @@
 module computer (
     input reset,
     input clk,
-    
-    // SPI pins
-    output mosi,
-    input miso,
-    output cs,
-    output spi_clock,
 
     //GPIO
-    input  [7:0] gpio_in,
-    output [7:0] gpio_out,
+    input  [7:0] gp_inputs, // Dedicated inputs
+    output [7:0] gp_outputs,  // Dedicated outputs
 
     //UI GPIO
-    output [7:0] uio_oe,
-    input  [7:0] uio_in,
-    output [7:0] uio_out
+    output [7:0] uio_oe, // IOs: Enable path (active high: 0=input, 1=output)
+    input  [7:0] uio_in,  // IOs: Input path
+    output [7:0] uio_out // IOs: Output path
 );
+
+    wire [7:0] usable_uio_oe;
+    assign uio_oe = {usable_uio_oe[7:4], 4'b1011}; 
 
     wire [15:0] instruction;
     wire [13:0] count;
@@ -57,17 +54,12 @@ module computer (
         
         .data_ready(inc),
         
-        .mosi(mosi),
-        .miso(miso),
-        .cs(cs),
-        .spi_clock(spi_clock),
+        .gp_inputs(gp_inputs),
+        .gp_outputs(gp_outputs),
 
-        .gpio_in_s(gpio_in),
-        .gpio_out_s(gpio_out),
-
-        .uio_oe(uio_oe),
-        .uio_in_s(uio_in),
-        .uio_out_s(uio_out)
+        .uio_oe(usable_uio_oe),
+        .uio_in(uio_in),
+        .uio_out(uio_out)
     );
 
 endmodule

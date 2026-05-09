@@ -82,7 +82,7 @@ def parse_line(line):
 def assemble_A(value):
     """A-instruction: @xxxx (hex input assumed)"""
     val = int(value, 16)
-    if val < 0 or val > 16381:
+    if val < 0 or val > 16383:
         raise ValueError(f"A value out of range: {value}")
     return "0" + format(val, "015b")
 

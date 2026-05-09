@@ -76,7 +76,7 @@ module cpu (
         .ng(ng), //output is negative
         .out(ALUOutput));
 
-    wire loadDReg = destPart[1];
+    wire loadDReg = isCInstruction & destPart[1];
 
     register_16 D_reg (
         .in(ALUOutput),
@@ -92,7 +92,7 @@ module cpu (
 
     reg shouldJump;
 
-    always @(isCInstruction or zr or ng) begin
+    always @(*) begin
         if (!isCInstruction)
             shouldJump = 0;
         else begin

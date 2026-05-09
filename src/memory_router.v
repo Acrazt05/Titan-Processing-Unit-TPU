@@ -31,20 +31,14 @@ module memory_router(
     // Signals CPU when both accesses finished
     output data_ready,
 
-    // SPI pins
-    output mosi,
-    input miso,
-    output cs,
-    output spi_clock,
-
     //GPIO
-    input  [7:0] gpio_in_s,
-    output [7:0] gpio_out_s,
+    input  [7:0] gp_inputs,
+    output [7:0] gp_outputs,
 
     //UI GPIO
     output [7:0] uio_oe,
-    input  [7:0] uio_in_s,
-    output [7:0] uio_out_s
+    input  [7:0] uio_in,
+    output [7:0] uio_out
 );
 
     // Address constants
@@ -57,60 +51,80 @@ module memory_router(
     wire ram_is_uio  = (ram_address == UIO_ADDR);
     wire ram_is_gpio = (ram_address == GPIO_ADDR);
 
-    // Internal data lines
+    /*
+        uio[0] - GPIO21 - CS
+        uio[1] - GPIO22 - MOSI
+        uio[2] - GPIO23 - MISO
+        uio[3] - GPIO24 - SCK
+
+    */
+
+    wire cs, mosi, miso, spi_clock;
+
+    assign uio_out[3:0] = {
+        spi_clock,
+        1'b0,
+        mosi,
+        cs
+    };
+
+    assign miso = uio_in[2];
+
+    assign uio_oe = uio_output[7:0];
+    assign uio_out[7:4] = uio_output[15:8];
+
     wire [15:0] spi_ram_out;
-    wire [15:0] gpio_out;
-    wire [15:0] uio_out;
 
     // SPI Memory Instantiation
     spi_memory memory_inst(
         .clk(clk),
         .reset(reset),
-        .ram_enabled(ram_is_spi),
-        //.ram_enabled(1'b1),
+        
         .rom_address(rom_address),
+        .rom_data_out(rom_data_out),
+        
+        .ram_enabled(ram_is_spi),
         .ram_address(ram_address),
         .ram_data_in(ram_data_in),
         .ram_write(ram_write && ram_is_spi),
-        //.ram_write(ram_write),
         .ram_data_out(spi_ram_out),
-        .rom_data_out(rom_data_out),
+        
         .data_ready(data_ready), // SPI controller handles the timing for both
+        
+        .cs(cs),
         .mosi(mosi),
         .miso(miso),
-        .cs(cs),
         .spi_clock(spi_clock)
     );
+
+    wire [15:0] gpio_out;
 
     // GPIO Instantiation
     gpio gpio_inst(
         .clk(clk),
         .reset(reset),
-        .input_signals(gpio_in_s),
-        .output_signals(gpio_out_s),
+        .input_signals(gp_inputs),
+        .output_signals(gp_outputs),
         .data_in(ram_data_in[7:0]),
         .load(ram_write && ram_is_gpio),
         .out(gpio_out)
     );
+
+    wire [15:0] uio_output;
 
     // UIO Instantiation
     uio uio_inst(
         .clk(clk),
         .reset(reset),
         .in(ram_data_in),
-        .uio_input(uio_in_s),
+        .uio_input(uio_in),
         .load(ram_write && ram_is_uio),
-        .out(uio_out)
+        .out(uio_output)
     );
-
-    assign uio_oe = uio_out[7:0];
-    assign uio_out_s = uio_out[15:8];
 
     // Output Multiplexer: Route the correct data back to the CPU
     assign ram_data_out = ram_is_gpio ? gpio_out :
-                          ram_is_uio  ? uio_out  :
+                          ram_is_uio  ? uio_output  :
                           spi_ram_out;
-
-    assign ram_data_out = spi_ram_out;
 
 endmodule
