@@ -66,13 +66,13 @@ module memory_router(
     spi_memory memory_inst(
         .clk(clk),
         .reset(reset),
-        //.ram_enabled(ram_is_spi),
-        .ram_enabled(1'b1),
+        .ram_enabled(ram_is_spi),
+        //.ram_enabled(1'b1),
         .rom_address(rom_address),
         .ram_address(ram_address),
         .ram_data_in(ram_data_in),
-        //.ram_write(ram_write && ram_is_spi),
-        .ram_write(ram_write),
+        .ram_write(ram_write && ram_is_spi),
+        //.ram_write(ram_write),
         .ram_data_out(spi_ram_out),
         .rom_data_out(rom_data_out),
         .data_ready(data_ready), // SPI controller handles the timing for both
@@ -107,9 +107,9 @@ module memory_router(
     assign uio_out_s = uio_out[15:8];
 
     // Output Multiplexer: Route the correct data back to the CPU
-    /*assign ram_data_out = ram_is_gpio ? gpio_out :
+    assign ram_data_out = ram_is_gpio ? gpio_out :
                           ram_is_uio  ? uio_out  :
-                          spi_ram_out;*/
+                          spi_ram_out;
 
     assign ram_data_out = spi_ram_out;
 
