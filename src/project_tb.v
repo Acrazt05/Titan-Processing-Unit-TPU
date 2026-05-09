@@ -7,9 +7,9 @@ module computer_tb;
 
     // Instantiate your computer
     tt_um_titan_proccesing_unit uut (
-        .ui_in(8'b0),
+        .ui_in(8'hA),
         .uo_out(),
-        .uio_in(8'b0),
+        .uio_in(8'hB),
         .uio_out(),
         .uio_oe(),
         .ena(1'b1),

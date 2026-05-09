@@ -260,9 +260,10 @@ module spi_memory (
 
                     if(ram_write) //decide wether to read or write to memory (1st byte)
                         state <= RAM_WRITE_DATA0;
-                    else
+                    else begin
                         state <= RAM_DATA_0;
                         dummy_bit <= 1'b1;
+                    end
 
                 end
                 else
@@ -389,8 +390,8 @@ module spi_memory (
 
                     end else begin
                         state <= DONE; //finish transaction, RAM doesn't need to be read
-                        cs <= 1;
-                        data_ready <= 1;
+                        //cs <= 1;
+                        //data_ready <= 1;
                     end
                 end
                 else
@@ -439,7 +440,12 @@ module spi_memory (
             // Finish transaction
             //==========================================================
             DONE: begin
-                ram_data_out <= buffer_ram_data_out;
+                if(ram_enabled == 1) begin
+                    ram_data_out <= buffer_ram_data_out;
+                end else begin
+                    ram_data_out <= 16'b0;
+                end
+
                 rom_data_out <= buffer_rom_data_out;
                 cs <= 1;
                 data_ready <= 1;

@@ -9,7 +9,16 @@ module computer (
     output mosi,
     input miso,
     output cs,
-    output spi_clock
+    output spi_clock,
+
+    //GPIO
+    input  [7:0] gpio_in,
+    output [7:0] gpio_out,
+
+    //UI GPIO
+    output [7:0] uio_oe,
+    input  [7:0] uio_in,
+    output [7:0] uio_out
 );
 
     wire [15:0] instruction;
@@ -34,7 +43,7 @@ module computer (
         .inc(inc)
     );
 
-    memory_router memory(
+    memory_router router(
         .clk(clk),
         .reset(reset),
 
@@ -51,7 +60,14 @@ module computer (
         .mosi(mosi),
         .miso(miso),
         .cs(cs),
-        .spi_clock(spi_clock)
+        .spi_clock(spi_clock),
+
+        .gpio_in_s(gpio_in),
+        .gpio_out_s(gpio_out),
+
+        .uio_oe(uio_oe),
+        .uio_in_s(uio_in),
+        .uio_out_s(uio_out)
     );
 
 endmodule

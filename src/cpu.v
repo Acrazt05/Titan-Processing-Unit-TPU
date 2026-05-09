@@ -49,6 +49,7 @@ module cpu (
             .in(ARegInput),
             .load(loadAReg & inc),
             .clk(clk),
+            .reset(reset),
             .out(ARegOutput)
         );
 
@@ -81,6 +82,7 @@ module cpu (
         .in(ALUOutput),
         .load(loadDReg & inc),
         .clk(clk),
+        .reset(reset),
         .out(ALUInputX)
     );
 

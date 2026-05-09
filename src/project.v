@@ -27,12 +27,19 @@ module tt_um_titan_proccesing_unit (
 
   */
 
-  //assign uio_oe[3:0] = 4'b1101; 
 
   wire cs;// = uio_out[0];
   wire mosi;// = uio_out[1];
   wire miso;// = uio_in[2];
   wire sck;// = uio_out[3];
+
+  wire [7:0] usable_uio_oe;
+  assign uio_oe = {usable_uio_oe[7:4], 4'b1011}; 
+
+  wire [7:0] usable_uio_in = {uio_in[7:4], 4'b0000};
+
+  wire [7:0] usable_uio_out;
+  assign uio_out = {usable_uio_out[7:4], 4'b0000};
 
   computer tpu(
 
@@ -45,7 +52,14 @@ module tt_um_titan_proccesing_unit (
     .mosi(mosi),
     .miso(miso),
     .cs(cs),
-    .spi_clock(sck)
+    .spi_clock(sck),
+
+    .gpio_in(ui_in),
+    .gpio_out(uo_out),
+
+    .uio_oe(usable_uio_oe),
+    .uio_in(usable_uio_in),
+    .uio_out(usable_uio_out)
   );
 
   //TODO: REMOVE! just for testing
