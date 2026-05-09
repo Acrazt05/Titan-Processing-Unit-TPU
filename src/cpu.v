@@ -26,7 +26,7 @@ module cpu (
     output [13:0] addressM,
 
     //to instruction memory
-    output [13:0] pc //TODO: maybe change to pc if there is no errors
+    output [13:0] pc 
 );
 
     wire isCInstruction = instruction[15];

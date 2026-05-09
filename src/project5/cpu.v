@@ -25,7 +25,7 @@ module cpu (
     output [14:0] addressM,
 
     //to instruction memory
-    output [14:0] pc //TODO: maybe change to pc if there is no errors
+    output [14:0] pc 
 );
     
 

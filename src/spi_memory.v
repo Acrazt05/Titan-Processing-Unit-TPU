@@ -3,9 +3,6 @@ module spi_clock_generator (
     input  wire reset,
     output wire clk_en
 );
-    //TODO: remove!
-    //assign clk_en = clk;
-
     // 3-bit counter to count 0-7 (8 states)
     reg [2:0] counter = 3'd0;
 
@@ -40,7 +37,7 @@ module spi_memory (
     input ram_enabled, //0 -> only read ROM, 1 -> read both ROM and RAM
 
     // CPU addresses (WORD addresses)
-    input [13:0] ram_address, //TODO: actually both 14-bit address spaces, will keep the 2 bits but will ignore for now
+    input [13:0] ram_address, 
     input [13:0] rom_address,
 
     // RAM write interface
