@@ -44,7 +44,6 @@ module cpu (
 
     //wire clk_en = clk & inc;
 
-
     register_16 A_reg (
             .in(ARegInput),
             .load(loadAReg & inc),
