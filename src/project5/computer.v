@@ -1,7 +1,3 @@
-`include "cpu.v"
-`include "memory.v"
-`include "rom_32k.v"
-
 module computer (
     input reset,
     input clk

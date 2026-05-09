@@ -86,7 +86,7 @@ module spi_memory (
     reg [7:0] shift_reg;
 
     // counts bits being transmitted
-    reg [2:0] bit_counter;
+    reg [3:0] bit_counter;
 
     // current SPI byte address
     reg [15:0] spi_address;
@@ -326,7 +326,8 @@ module spi_memory (
                 // Address is shifthed left (multiplied by 2) to account for that
                 // i.e. 0 -> will return spi memory address [0,1] on the spi transaction
                 // 1 -> [2,3], 2 -> [4,5] an etc... ¨ 
-                spi_address <= rom_address << 1;
+                //spi_address <= rom_address << 1;
+                spi_address <= {2'b00, rom_address} << 1;
 
                 shift_reg <= SPI_READ; //Read command (0x03)
                 bit_counter <= 7; //how many bits are left to transfer (8 in this case (a read command))
@@ -373,8 +374,9 @@ module spi_memory (
 
                     if (ram_enabled) begin
                         // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
-                        spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
-
+                        //spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
+                        spi_address <= ({2'b00, ram_address} << 1) + RAM_OFFSET;
+                        
                         if(ram_write) //decide wether or not to read or write to ram memory
                             shift_reg <= SPI_WRITE; //save command
                         else

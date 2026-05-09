@@ -1,5 +1,3 @@
-`include "half_adder.v"
-
 module full_adder (
     input wire a,
     input wire b,

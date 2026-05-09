@@ -1,7 +1,3 @@
-`include "register_16.v"
-`include "pc.v"
-`include "alu.v"
-
 module cpu (
     //from data memory
     input [15:0] inM, //RAM[A]

@@ -1,6 +1,3 @@
-`include "cpu.v"
-`include "memory_router.v"
-
 module computer (
     input reset,
     input clk,

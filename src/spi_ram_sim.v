@@ -33,7 +33,7 @@ module spi_ram_sim #(
 
     reg [15:0] address;
 
-    reg [2:0] bit_counter;
+    reg [3:0] bit_counter;
 
     //---------------------------------------------------
     // Debug files

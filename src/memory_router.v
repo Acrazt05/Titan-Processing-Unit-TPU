@@ -1,7 +1,3 @@
-`include "spi_memory.v"
-`include "gpio.v"
-`include "uio.v"
-
 /*
 ========= Memory Router =============
 Wrapper that routes to SPI, GPIO, or UIO based on address.

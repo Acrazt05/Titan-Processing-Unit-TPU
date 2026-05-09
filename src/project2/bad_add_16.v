@@ -1,7 +1,3 @@
-`include "half_adder.v"
-`include "full_adder.v"
-
-
 //16-bit ripple-carry adder (you could implement a carry-lookahead or Kogge-Stone adder to make it faster)
 module bad_add_16 (
     input wire [15:0] a,

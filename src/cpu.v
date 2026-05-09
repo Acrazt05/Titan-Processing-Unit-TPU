@@ -1,6 +1,3 @@
-`include "register_16.v"
-`include "pc.v"
-`include "alu.v"
 
 module cpu (
     //from data memory

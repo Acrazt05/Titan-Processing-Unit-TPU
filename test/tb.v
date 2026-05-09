@@ -12,7 +12,7 @@ module computer_tb;
     wire [7:0] uio_oe;
 
     // DUT
-    tt_um_titan_proccesing_unit uut (
+    tt_um_Acrazt05_titan_proccesing_unit uut (
         .ui_in(ui_in),
         .uo_out(uo_out),
         .uio_in(uio_in),

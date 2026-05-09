@@ -1,7 +1,3 @@
-`include "keyboard.v"
-`include "screen.v"
-`include "ram_16k.v"
-
 module memory (
     input [15:0] in,
     input [14:0] address,
