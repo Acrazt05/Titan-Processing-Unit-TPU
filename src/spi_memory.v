@@ -278,7 +278,7 @@ module spi_memory (
             RAM_WRITE_DATA0: begin
 
                 //mosi <= ram_data_in[15 - bit_counter];
-                mosi <= ram_data_in[7 + bit_counter];
+                mosi <= ram_data_in[8 + bit_counter];
 
                 if(bit_counter == 0) begin
                     bit_counter <= 7;
