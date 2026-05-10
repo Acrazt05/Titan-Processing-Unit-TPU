@@ -1,24 +1,3 @@
-module spi_clock_generator (
-    input  wire clk,
-    input  wire reset,
-    output wire clk_en
-);
-    // 3-bit counter to count 0-7 (8 states)
-    reg [1:0] counter;
-
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            counter <= 2'd0;
-        end else begin
-            counter <= counter + 2'd1;
-        end
-    end
-
-    // Pulse high when counter wraps around
-    assign clk_en = (counter == 2'd3);
-
-endmodule
-
 //==========================================================
 // SPI MEMORY
 //
@@ -71,14 +50,6 @@ module spi_memory (
     //==========================================================
     // SPI clock generation
     //==========================================================
-    wire clk_en;
-    
-    spi_clock_generator spi_clock_gen(
-        .clk(clk),
-        .reset(reset),
-        .clk_en(clk_en)
-    );
-
     //==========================================================
     // Internal registers
     //==========================================================
@@ -132,8 +103,11 @@ module spi_memory (
 
     localparam DONE            = 13;
 
-    assign spi_clock = clk_en;
     reg spi_phase;
+
+    reg [1:0] counter;
+    wire clk_en = (counter == 2'd3);
+    assign spi_clock = clk_en;
 
     always @(posedge clk or posedge reset) begin
         if(reset || data_ready) begin //TODO: maybe don't need data_ready here
@@ -143,7 +117,10 @@ module spi_memory (
             data_ready <= 0;
             mosi <= 0;
             dummy_bit <= 1'b0;
+            counter <= 2'd0;
+
         end else begin
+            counter <= counter + 2'd1;
             if(spi_phase == 0 && clk_en) begin
                 spi_phase <= 1;
                 //Positive edge phase (sample miso)
