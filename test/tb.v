@@ -41,10 +41,10 @@ module computer_tb;
     // 100 MHz clock
     always #5 clk = ~clk;
 
-    $display("Simulation initiated. ui_in = %h", ui_in);
-
-
     initial begin
+        $display("Simulation initiated. ui_in = %h", ui_in);
+
+        $dumpfile("tb.fst");
         $dumpfile("wave.vcd");
         $dumpvars(0, computer_tb);
 
