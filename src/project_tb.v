@@ -5,7 +5,7 @@ module computer_tb;
     reg clk = 0;
     reg reset = 0;
 
-    wire [7:0] ui_in = 8'hA;
+    wire [7:0] ui_in = 8'hB;
     wire [7:0] uo_out;
     wire [7:0] uio_in;
     wire [7:0] uio_out;
@@ -51,18 +51,23 @@ module computer_tb;
     always #1 clk = ~clk;
 
     initial begin
+        $display("Simulation initiated. ui_in = %h", ui_in);
+
         // Waveform dump
+        //$dumpfile("tb.fst");
         $dumpfile("wave.vcd");
         $dumpvars(0, computer_tb);
         //$dumpvars(0, memory_tb);
 
         // Reset sequence
-        #1;
+        reset = 0;
+        repeat (5) @(posedge clk);
         reset = 1;
 
-        // Run long enough for programs to execute
-        #200001;
+        // Let program run
+        repeat (50000) @(posedge clk);
 
+        $display("Simulation finished. uo_out = %h", uo_out);
         $finish;
     end
 
