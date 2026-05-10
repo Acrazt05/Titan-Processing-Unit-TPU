@@ -133,23 +133,166 @@ module spi_memory (
     localparam DONE            = 13;
 
     assign spi_clock = clk_en;
-
-    reg clk_en_dly;
-
-    wire spi_posedge = ~clk_en_dly && clk_en;
-    wire spi_negedge = clk_en_dly && ~clk_en;
+    reg spi_phase;
 
     always @(posedge clk or posedge reset) begin
         if(reset || data_ready) begin //TODO: maybe don't need data_ready here
+            spi_phase <= 0;
             state <= IDLE;
             cs <= 1;
             data_ready <= 0;
             mosi <= 0;
             dummy_bit <= 1'b0;
-        end
-        else  begin
-            clk_en_dly <= clk_en;
-            if(spi_negedge) begin
+        end else begin
+            if(spi_phase == 0 && clk_en) begin
+                spi_phase <= 1;
+                //Positive edge phase (sample miso)
+                case(state)
+                    //==========================================================
+                    // IDLE
+                    //
+                    // Start a new CPU cycle.
+                    // First we fetch the instruction from ROM.
+                    //==========================================================
+                    IDLE: begin
+
+                        cs <= 0;               // start SPI transaction
+                        data_ready <= 0;       //tell the cpu to wait for data (stall pc)
+
+                        // Convert CPU word address → SPI byte address
+                        // The SPI Memory uses 8-bit words and the CPU uses 16 bit words
+                        // Address is shifthed left (multiplied by 2) to account for that
+                        // i.e. 0 -> will return spi memory address [0,1] on the spi transaction
+                        // 1 -> [2,3], 2 -> [4,5] an etc... ¨ 
+                        //spi_address <= rom_address << 1;
+                        spi_address <= {2'b00, rom_address} << 1;
+
+                        shift_reg <= SPI_READ; //Read command (0x03)
+                        bit_counter <= 7; //how many bits are left to transfer (8 in this case (a read command))
+
+                        state <= ROM_CMD; //move on to next state
+
+                    end
+
+                    //==========================================================
+                    // Receive ROM byte 0
+                    //==========================================================
+                    ROM_DATA_0: begin
+
+                        if(dummy_bit) begin
+                            dummy_bit <= 1'b0;
+                        end else begin
+                            /*if(bit_counter == 7) begin
+                                $display("receiving 1st ROM bit: %b", miso);
+                            end*/
+
+                            byte0[bit_counter] <= miso; //save each incomming bit (from rom data byte 1)
+
+                            if(bit_counter == 0) begin //1st rom data byte has been received
+                                bit_counter <= 7; //restart bit counter to start receiving rom data byte 2
+                                state <= ROM_DATA_1;  //move on to next state(receive rom data byte 2)
+                            end
+                            else
+                                bit_counter <= bit_counter - 1;  //there is one less bit to be received 
+                        end
+                    end
+
+                    //==========================================================
+                    // Receive ROM byte 1
+                    //
+                    // Combine two bytes → 16-bit instruction
+                    //==========================================================
+                    ROM_DATA_1: begin
+
+                        byte1[bit_counter] <= miso;  //save each incomming bit (from rom data byte 2)
+
+                        if(bit_counter == 0) begin //2nd rom data byte has been received (move on to ram write/read cmd)
+
+                            buffer_rom_data_out <= {byte0, byte1[7:1], miso}; //combine both bytes into 16-bit word instruction to give back to cpu
+
+                            if (ram_enabled) begin
+                                // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
+                                //spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
+                                spi_address <= ({2'b00, ram_address} << 1) + RAM_OFFSET;
+                                
+                                if(ram_write) //decide wether or not to read or write to ram memory
+                                    shift_reg <= SPI_WRITE; //save command
+                                else
+                                    shift_reg <= SPI_READ; //save command
+
+                                bit_counter <= 7; //restart bit counter to start sending read or write ram cmd
+
+                                state <= RAM_CMD; //move on to next state (send ram command (read or write)) (we don't use fast read)
+                                cs <= 1;
+
+                            end else begin
+                                state <= DONE; //finish transaction, RAM doesn't need to be read
+                                //cs <= 1;
+                                //data_ready <= 1;
+                            end
+                        end
+                        else
+                            bit_counter <= bit_counter - 1; //there is one less bit to be received 
+
+                    end
+
+                    //==========================================================
+                    // Receive RAM byte 0
+                    //==========================================================
+                    RAM_DATA_0: begin
+                        if(dummy_bit) begin
+                            dummy_bit <= 1'b0;
+                        end else begin
+                            byte0[bit_counter] <= miso;
+
+                            if(bit_counter == 0) begin
+                                bit_counter <= 7;
+                                state <= RAM_DATA_1;
+                            end
+                            else
+                                bit_counter <= bit_counter - 1;
+                        end
+                    end
+
+                    //==========================================================
+                    // Receive RAM byte 1
+                    //==========================================================
+                    RAM_DATA_1: begin
+
+                        byte1[bit_counter] <= miso;
+
+                        if(bit_counter == 0) begin
+
+                            buffer_ram_data_out <= {byte0, byte1[7:1], miso};
+
+                            state <= DONE;
+
+                        end
+                        else
+                            bit_counter <= bit_counter - 1;
+
+                    end
+
+                    //==========================================================
+                    // Finish transaction
+                    //==========================================================
+                    DONE: begin
+                        if(ram_enabled == 1) begin
+                            ram_data_out <= buffer_ram_data_out;
+                        end else begin
+                            ram_data_out <= 16'b0;
+                        end
+
+                        rom_data_out <= buffer_rom_data_out;
+                        cs <= 1;
+                        data_ready <= 1;
+                        state <= IDLE;
+
+                    end
+                endcase
+            end else if(spi_phase == 1) begin
+                spi_phase <= 0;
+                //Negative edge phase (Drive mosi)
                 case(state)
 
                     //==========================================================
@@ -295,150 +438,6 @@ module spi_memory (
                             state <= DONE;
                         else
                             bit_counter <= bit_counter - 1;
-
-                    end
-                endcase
-            end else if (spi_posedge) begin
-                case(state)
-                    //==========================================================
-                    // IDLE
-                    //
-                    // Start a new CPU cycle.
-                    // First we fetch the instruction from ROM.
-                    //==========================================================
-                    IDLE: begin
-
-                        cs <= 0;               // start SPI transaction
-                        data_ready <= 0;       //tell the cpu to wait for data (stall pc)
-
-                        // Convert CPU word address → SPI byte address
-                        // The SPI Memory uses 8-bit words and the CPU uses 16 bit words
-                        // Address is shifthed left (multiplied by 2) to account for that
-                        // i.e. 0 -> will return spi memory address [0,1] on the spi transaction
-                        // 1 -> [2,3], 2 -> [4,5] an etc... ¨ 
-                        //spi_address <= rom_address << 1;
-                        spi_address <= {2'b00, rom_address} << 1;
-
-                        shift_reg <= SPI_READ; //Read command (0x03)
-                        bit_counter <= 7; //how many bits are left to transfer (8 in this case (a read command))
-
-                        state <= ROM_CMD; //move on to next state
-
-                    end
-
-                    //==========================================================
-                    // Receive ROM byte 0
-                    //==========================================================
-                    ROM_DATA_0: begin
-
-                        if(dummy_bit) begin
-                            dummy_bit <= 1'b0;
-                        end else begin
-                            /*if(bit_counter == 7) begin
-                                $display("receiving 1st ROM bit: %b", miso);
-                            end*/
-
-                            byte0[bit_counter] <= miso; //save each incomming bit (from rom data byte 1)
-
-                            if(bit_counter == 0) begin //1st rom data byte has been received
-                                bit_counter <= 7; //restart bit counter to start receiving rom data byte 2
-                                state <= ROM_DATA_1;  //move on to next state(receive rom data byte 2)
-                            end
-                            else
-                                bit_counter <= bit_counter - 1;  //there is one less bit to be received 
-                        end
-                    end
-
-                    //==========================================================
-                    // Receive ROM byte 1
-                    //
-                    // Combine two bytes → 16-bit instruction
-                    //==========================================================
-                    ROM_DATA_1: begin
-
-                        byte1[bit_counter] <= miso;  //save each incomming bit (from rom data byte 2)
-
-                        if(bit_counter == 0) begin //2nd rom data byte has been received (move on to ram write/read cmd)
-
-                            buffer_rom_data_out <= {byte0, byte1[7:1], miso}; //combine both bytes into 16-bit word instruction to give back to cpu
-
-                            if (ram_enabled) begin
-                                // Prepare RAM access (note that spi_address get overwritten with the new ram value instead of the rom value)
-                                //spi_address <= (ram_address << 1) + RAM_OFFSET; //same as before, multiply by two but also add offset to get to ram partition
-                                spi_address <= ({2'b00, ram_address} << 1) + RAM_OFFSET;
-                                
-                                if(ram_write) //decide wether or not to read or write to ram memory
-                                    shift_reg <= SPI_WRITE; //save command
-                                else
-                                    shift_reg <= SPI_READ; //save command
-
-                                bit_counter <= 7; //restart bit counter to start sending read or write ram cmd
-
-                                state <= RAM_CMD; //move on to next state (send ram command (read or write)) (we don't use fast read)
-                                cs <= 1;
-
-                            end else begin
-                                state <= DONE; //finish transaction, RAM doesn't need to be read
-                                //cs <= 1;
-                                //data_ready <= 1;
-                            end
-                        end
-                        else
-                            bit_counter <= bit_counter - 1; //there is one less bit to be received 
-
-                    end
-
-                    //==========================================================
-                    // Receive RAM byte 0
-                    //==========================================================
-                    RAM_DATA_0: begin
-                        if(dummy_bit) begin
-                            dummy_bit <= 1'b0;
-                        end else begin
-                            byte0[bit_counter] <= miso;
-
-                            if(bit_counter == 0) begin
-                                bit_counter <= 7;
-                                state <= RAM_DATA_1;
-                            end
-                            else
-                                bit_counter <= bit_counter - 1;
-                        end
-                    end
-
-                    //==========================================================
-                    // Receive RAM byte 1
-                    //==========================================================
-                    RAM_DATA_1: begin
-
-                        byte1[bit_counter] <= miso;
-
-                        if(bit_counter == 0) begin
-
-                            buffer_ram_data_out <= {byte0, byte1[7:1], miso};
-
-                            state <= DONE;
-
-                        end
-                        else
-                            bit_counter <= bit_counter - 1;
-
-                    end
-
-                    //==========================================================
-                    // Finish transaction
-                    //==========================================================
-                    DONE: begin
-                        if(ram_enabled == 1) begin
-                            ram_data_out <= buffer_ram_data_out;
-                        end else begin
-                            ram_data_out <= 16'b0;
-                        end
-
-                        rom_data_out <= buffer_rom_data_out;
-                        cs <= 1;
-                        data_ready <= 1;
-                        state <= IDLE;
 
                     end
                 endcase
