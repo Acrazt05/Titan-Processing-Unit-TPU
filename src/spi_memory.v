@@ -134,11 +134,10 @@ module spi_memory (
 
     assign spi_clock = clk_en;
 
-    wire spi_posedge = clk && (clk_en == 1);
-
     reg clk_en_dly;
 
-    wire spi_negedge = (clk_en_dly == 1'b1) && (clk_en == 1'b0);
+    wire spi_posedge = ~clk_en_dly && clk_en;
+    wire spi_negedge = clk_en_dly && ~clk_en;
 
     always @(posedge clk or posedge reset) begin
         if(reset || data_ready) begin //TODO: maybe don't need data_ready here
